@@ -1,11 +1,11 @@
 
 let board = [
-['','',''],
-['','',''],
-['','','']
+	['','',''],
+	['','',''],
+	['','','']
 ];
 
-let ai = 'X';
+let comp = 'X';
 let human = 'O';
 let curr_player = human;
 
@@ -15,15 +15,18 @@ let h;
 
 function setup() {
 	createCanvas(400, 400);
-	//frameRate(2);
 	w = width / 3;
 	h = height / 3;
 	nextTurn();	
 }
 
 function equal(a, b, c) {
-	if (a == b && b == c && a != '')	return true;
-	else 	return false; 
+	if (a == b && b == c && a != '') {
+		return true;
+	}
+	else {
+		return false;
+	} 
 }
 
 function check() {
@@ -46,9 +49,12 @@ function check() {
 			}
 		}
 	}
-	if (winner == null && avail == 0) return 'Tie';
-	else 	return winner;
-
+	if (winner == null && avail == 0) {
+		return 'Tie';
+	}
+	else {
+		return winner;
+	}
 }
 
 
@@ -58,48 +64,17 @@ function mousePressed() {
 		let j = floor(mouseY / h);
 		if (board[i][j] == '') {
 			board[i][j] = human;
-			curr_player = ai;
+			curr_player = comp;
 			nextTurn();
 		}
 	}
 }
 
-/*
-//For both computer players 
-function nextTurn() {
-	let index = floor(random(available.length));
-	let spot  = available.splice(index, 1)[0];
-	let i = spot[0];
-	let j = spot[1];
-	board[i][j] = players[curr_player];
-	curr_player = (curr_player + 1) % players.length; 
-}
-*/
-
-//For human vs comp
-function nextTurn() {
-	let available = [];
-	for (let i = 0; i < 3; i++) {
-		for (let j = 0; j < 3; j++) {
-			if (board[i][j] == '') {
-				available.push({i, j});
-			}
-		}
-	}
-	let move = random(available);
-	board[move.i][move.j] = ai;
-	curr_player = human;
-}
-
-
-
 function draw() {
 	background(0);
-	//let h = height/3;
-	//let w = width/3;
 	strokeWeight(4);
 	stroke(255);
-	//textSize(32);
+
 	line(w, 0, w, height);
 	line(w*2, 0, w*2, height);
 	line(0, h, width, h);
@@ -115,7 +90,7 @@ function draw() {
 				noFill();
 				ellipse(x, y, w*0.7);
 			}
-			else if (spot == ai) {
+			else if (spot == comp) {
 				line(x-r, y-r, x+r, y+r);
 				line(x-r, y+r, x+r, y-r);
 			}
@@ -126,13 +101,86 @@ function draw() {
 	let res = check();
 	if (res != null) {
 		noLoop();
-		if (res == 'Tie')	createP("Result: " + res).style('color', '#000').style('font-size', '32pt');
-		else 			createP(res + " is the winner!").style('color', '#000').style('font-size', '32pt');
+		let resultP = createP('');
+		resultP.style('color', '#000').style('font-size', '32pt');
+		if (res == 'Tie') {
+			resultP.html('Its a Tie');
+		}	
+		else {
+			resultP.html('${res} wins!');
+		}
 	}
-	/*
-	else {
-		nextTurn();
-	}
-	*/
-
 }
+
+//For human vs comp
+function nextTurn() {
+	let res = check();
+	if (res !== null) {
+		return scores[res];
+	}
+	
+	let bestScore = -Infinity;
+	let move;
+	for (let i = 0; i < 3; i++) {
+		for (let j = 0; j < 3; j++) {
+			if (board[i][j] == '') {
+				board[i][j] = comp;
+				let score = minimax(board, 0, false);
+				board[i][j] = '';
+				if (score > bestScore) {
+					bestScore = score;
+					move = { i, j };
+				}
+			}
+		}
+	}
+	board[move.i][move.j] = comp;
+	curr_player = human;
+}
+
+let scores = {
+	X: 1,
+	O: -1,
+	Tie: 0
+};
+
+
+function minimax(board, depth, isMax) {
+	let res = check();
+	if (res !== null) {
+		return scores[res];
+	}
+
+	if (isMax) {
+		let bestScore = -Infinity;
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
+				if (board[i][j] == '') {
+					board[i][j] = comp;
+					let score = minimax(board, depth + 1, false);
+					board[i][j] = '';
+					bestScore = max(score, bestScore);
+				}
+			}
+		}
+		return bestScore;
+	}
+	else {
+		let bestScore = Infinity;
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
+				if (board[i][j] == '') {
+					board[i][j] = human;
+					let score = minimax(board, depth + 1, true);
+					board[i][j] = '';
+					bestScore = min(score, bestScore);
+				}
+			}
+		}
+		return bestScore;
+	}
+}
+
+
+
+
